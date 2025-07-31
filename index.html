@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulls Eye & Magpie Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .game-title {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .game-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .guess-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .guess-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback-section {
+            margin-top: 30px;
+        }
+
+        .feedback-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .guess-word {
+            font-weight: bold;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .feedback-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .bulls-eye {
+            background: #28a745;
+            color: white;
+        }
+
+        .magpie {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .game-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stats-text {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .new-game-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .new-game-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🎯 Bulls Eye & Magpie</h1>
+        <p class="game-subtitle">Guess the 5-letter word!</p>
+        
+        <div class="input-section">
+            <input type="text" id="guessInput" class="guess-input" placeholder="Enter your guess..." maxlength="5" autocomplete="off">
+            <button id="submitBtn" class="submit-btn">Submit Guess</button>
+        </div>
+
+        <div id="message" class="message hidden"></div>
+        
+        <div id="feedbackSection" class="feedback-section"></div>
+        
+        <div id="gameStats" class="game-stats hidden">
+            <p class="stats-text">Game completed! The word was: <strong id="secretWord"></strong></p>
+            <button id="newGameBtn" class="new-game-btn">New Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive word list
+        const wordList = [
+            'would', 'their', 'about', 'other', 'could', 'first', 'after', 'those',
+            'world', 'being', 'under', 'while', 'might', 'great', 'since', 'right',
+            'house', 'place', 'found', 'until', 'water', 'think', 'night', 'later',
+            'point', 'group', 'young', 'given', 'among', 'often', 'early', 'white',
+            'large', 'along', 'least', 'power', 'light', 'thing', 'whole', 'times',
+            'human', 'above', 'today', 'quite', 'taken', 'death', 'field', 'money',
+            'whose', 'major', 'study', 'south', 'board', 'close', 'force', 'court',
+            'voice', 'woman', 'front', 'clear', 'party', 'music', 'child', 'short',
+            'north', 'sound', 'black', 'value', 'table', 'alone', 'third', 'space',
+            'wrote', 'brown', 'stage', 'miles', 'heart', 'basic', 'tried', 'shown',
+            'doing', 'bring', 'range', 'final', 'story', 'earth', 'labor', 'stand',
+            'stock', 'below', 'ready', 'trade', 'moral', 'comes', 'trial', 'maybe',
+            'works', 'month', 'cause', 'wrong', 'hotel', 'plant', 'lower', 'daily',
+            'march', 'radio', 'chief', 'based', 'image', 'horse', 'lived', 'doubt',
+            'plane', 'faith', 'corps', 'speak', 'heavy', 'price', 'negro', 'write',
+            'drive', 'reach', 'spent', 'eight', 'built', 'mouth', 'james', 'meant',
+            'share', 'claim', 'style', 'fight', 'funds', 'worth', 'older', 'noted',
+            'equal', 'dance', 'break', 'cover', 'fixed', 'touch', 'spoke', 'build',
+            'shape', 'broad', 'learn', 'begin', 'sight', 'henry', 'youth', 'fresh',
+            'drink', 'train', 'index', 'watch', 'favor', 'model', 'anode', 'solid',
+            'judge', 'knife', 'quiet', 'round', 'twice', 'store', 'frame', 'louis',
+            'brief', 'jones', 'phase', 'sharp', 'broke', 'forth', 'april', 'unity',
+            'drawn', 'clean', 'china', 'texas', 'ought', 'quick', 'frank', 'thick',
+            'paris', 'aside', 'score', 'block', 'chair', 'birth', 'dream', 'empty',
+            'rifle', 'drove', 'beach', 'shore', 'metal', 'ideal', 'coast', 'scale',
+            'armed', 'exist', 'novel', 'smile', 'roman', 'minor', 'avoid', 'stone',
+            'truck', 'lewis', 'alive', 'uncle', 'truly', 'vital', 'spite', 'wagon',
+            'smith', 'faced', 'phone', 'crowd', 'depth', 'prove', 'chest', 'spend',
+            'raise', 'flesh', 'dozen', 'angle', 'begun', 'extra', 'worse', 'chain',
+            'latin', 'count', 'swung', 'plain', 'anger', 'royal', 'tired', 'guard',
+            'hoped', 'grand', 'blind', 'opera', 'humor', 'grant', 'trend', 'threw',
+            'brain', 'prime', 'curve', 'angry', 'snake', 'pilot', 'fired', 'agent',
+            'enjoy', 'brush', 'porch', 'cloth', 'saved', 'route', 'rapid', 'grown',
+            'wages', 'pride', 'throw', 'hardy', 'urban', 'reply', 'bound', 'linda',
+            'teach', 'bread', 'rough', 'smoke', 'match', 'shift', 'focus', 'grace',
+            'shear', 'guest', 'stick', 'joint', 'track', 'mayor', 'onset', 'turns',
+            'piano', 'mixed', 'noise', 'drunk', 'chose', 'admit', 'magic', 'paint',
+            'thank', 'lying', 'baker', 'forty', 'dirty', 'ratio', 'maris', 'guide',
+            'tough', 'bench', 'fruit', 'waste', 'yield', 'clark', 'grade', 'crime',
+            'ocean', 'dying', 'clerk', 'sugar', 'worst', 'swept', 'blame', 'crazy',
+            'badly', 'alert', 'lunch', 'owner', 'bride', 'swift', 'burst', 'leads',
+            'guilt', 'grave', 'naked', 'outer', 'trail', 'shock', 'panel', 'felix',
+            'split', 'slave', 'strip', 'cried', 'movie', 'merit', 'argue', 'morse',
+            'false', 'pound', 'arise', 'shade', 'prize', 'laugh', 'cloud', 'mines',
+            'wound', 'newly', 'scope', 'suite', 'shirt', 'ranch', 'grain', 'julia',
+            'exact', 'slept', 'fiber', 'charm', 'sixth', 'entry', 'storm', 'beard',
+            'mount', 'hired', 'devil', 'vague', 'honey', 'yours', 'adult', 'faint',
+            'cheap', 'swing', 'brave', 'mason', 'motel', 'draft', 'actor', 'craft',
+            'noble', 'trace', 'casey', 'giant', 'cabin', 'sweat', 'stuck', 'habit',
+            'stern', 'spare', 'valid', 'ralph', 'pitch', 'dealt', 'plate', 'panic',
+            'chart', 'blues', 'fault', 'keith', 'shame', 'flash', 'screw', 'pause',
+            'smart', 'sixty', 'fluid', 'joyce', 'glory', 'delay', 'skirt', 'tales',
+            'lucky', 'slide', 'cream', 'input', 'cathy', 'crash', 'alike', 'sauce',
+            'solve', 'mercy', 'stake', 'naive', 'relax', 'lodge', 'sober', 'crown',
+            'glued', 'dairy', 'cuban', 'midst', 'drank', 'slope', 'realm', 'lover',
+            'gains', 'letch', 'chase', 'drain', 'print', 'drift', 'angel', 'lemon',
+            'stein', 'abuse', 'saxon', 'arose', 'squad', 'serum', 'brick', 'ridge',
+            'grasp', 'bunch', 'logic', 'ivory', 'graph', 'awful', 'sport', 'quote',
+            'steam', 'angie', 'flame', 'tumor', 'shake', 'chaos', 'brand', 'nurse',
+            'weary', 'ample', 'fancy', 'spray', 'homer', 'orbit', 'piled', 'alien',
+            'waved', 'candy', 'dusty', 'solar', 'byron', 'opium', 'quest', 'saint',
+            'liver', 'lined', 'trick', 'katie', 'blast', 'crude', 'sloan', 'react',
+            'stove', 'dutch', 'straw', 'alter', 'cruel', 'vocal', 'upset', 'decay',
+            'flung', 'swore', 'usage', 'clung', 'debut', 'prone', 'vigor', 'garth',
+            'egypt', 'width', 'stare', 'brace', 'marty', 'diane', 'alice', 'grove',
+            'purse', 'prose', 'blank', 'depot', 'acute', 'taxed', 'media', 'patch',
+            'hymen', 'tower', 'aloud', 'imply', 'globe', 'adopt', 'blade', 'dough',
+            'handy', 'virus', 'slice', 'rival', 'stray', 'irony', 'sadly', 'spark',
+            'layer', 'organ', 'bryan', 'wayne', 'climb', 'phony', 'dimly', 'shelf',
+            'unwed', 'chris', 'maker', 'lyric', 'crest', 'vapor', 'lousy', 'shaft',
+            'curse', 'ghost', 'flush', 'paced', 'waist', 'dylan', 'mound', 'moist',
+            'vince', 'quint', 'haven', 'overt', 'edwin', 'glaze', 'juice', 'wired',
+            'viola', 'crawl', 'crept', 'hogan', 'venus', 'elbow', 'julie', 'thumb',
+            'steak', 'boris', 'baton', 'forge', 'stole', 'spade', 'cigar', 'token',
+            'bacon', 'grief', 'wrist', 'forum', 'weird', 'paste', 'risen', 'roast',
+            'unite', 'pious', 'lunar', 'mouse', 'ditch', 'rocky', 'swear', 'slate',
+            'bleak', 'flock', 'stacy', 'agony', 'bronx', 'blown', 'tonal', 'pearl',
+            'wrath', 'pulse', 'resin', 'pants', 'stack', 'glove', 'awoke', 'demon',
+            'reins', 'chien', 'gland', 'haste', 'blunt', 'choke', 'quack', 'surge',
+            'slack', 'wheat', 'scrub', 'maine', 'topic', 'rated', 'woven', 'bulky',
+            'timed', 'blend', 'oscar', 'slump', 'borne', 'wreck', 'sioux', 'artie',
+            'motif', 'thief', 'trunk', 'quirt', 'boast', 'frail', 'focal', 'minus',
+            'lucia', 'ankle', 'baked', 'crisp', 'setup', 'knelt', 'credo', 'stamp',
+            'choir', 'fraud', 'super', 'shout', 'scrap', 'traps', 'flour', 'bloat',
+            'peril', 'rusty', 'flair', 'scout', 'reign', 'chore', 'tiger', 'derby',
+            'medal', 'glare', 'delta', 'rouge', 'repay', 'guild', 'maple', 'mores',
+            'abide', 'beast', 'rhine', 'sword', 'links', 'barge', 'plank', 'cable',
+            'fiery', 'waged', 'squat', 'wiser', 'apron', 'cough', 'speck', 'chord',
+            'spear', 'giles', 'cargo', 'stark', 'polar', 'sonar', 'basin', 'brisk',
+            'gaudy', 'enact', 'burke', 'bowed', 'blaze', 'argon', 'slick', 'vowel',
+            'proxy', 'canoe', 'hound', 'laden', 'poise', 'gaunt', 'scent', 'bitch',
+            'spine', 'alvin', 'probe', 'rebut', 'tenor', 'forte', 'caper', 'snack',
+            'cling', 'fried', 'guise', 'lapse', 'brute', 'juicy', 'noisy', 'stain',
+            'poker', 'towel', 'notch', 'blake', 'shave', 'rinse', 'aisle', 'epoch',
+            'mulch', 'album', 'vogue', 'septa', 'relic', 'sandy', 'burnt', 'marie',
+            'divan', 'pansy', 'pinch', 'fetch', 'frost', 'brian', 'shaky', 'shine',
+            'servo', 'ulcer', 'tying', 'coral', 'nasty', 'smoky', 'steal', 'crane',
+            'stony', 'doris', 'murky', 'rainy', 'truce', 'inert', 'gaily', 'delhi',
+            'jason', 'lofty', 'dares', 'widen', 'scant', 'manor', 'hilum', 'ching',
+            'hairy', 'monte', 'froze', 'witch', 'clash', 'pyrex', 'bulge', 'sadie',
+            'incur', 'plumb', 'curly', 'tread', 'olive', 'dingy', 'satin', 'diego',
+            'sting', 'shone', 'plead', 'barth', 'mayer', 'batch', 'badge', 'cairo',
+            'flask', 'hasty', 'bogey', 'ernst', 'vowed', 'swamp', 'spire', 'punch',
+            'latch', 'texan', 'sworn', 'berth', 'growl', 'groin', 'gravy', 'bruce',
+            'ethos', 'cater', 'marsh', 'flyer', 'xylem', 'ethan', 'aides', 'clump',
+            'smack', 'whine', 'welsh', 'clint', 'spice', 'diary', 'salty', 'vinyl',
+            'bathe', 'owing', 'crush', 'doric', 'lithe', 'gleam', 'dogma', 'vicar',
+            'snowy', 'jerky', 'adept', 'misty', 'savoy', 'piety', 'capes', 'scorn',
+            'macon', 'sulky', 'amply', 'stale', 'simon', 'kathy', 'wharf', 'lunge',
+            'dover', 'scarf', 'pedal', 'haunt', 'stram', 'doyle', 'gamut', 'liner',
+            'yacht', 'tawny', 'privy', 'tiled', 'tempo', 'cadet', 'dregs', 'weigh',
+            'fairy', 'umber', 'eliot', 'rowdy', 'sized', 'ropes', 'scalp', 'lucid',
+            'inlet', 'mused', 'faust', 'audit', 'flint', 'tribe', 'madly', 'cyrus',
+            'stead', 'jorge', 'syrup', 'quota', 'voter', 'blink', 'ethic', 'moise',
+            'flown', 'tomas', 'dwarf', 'psalm', 'edith', 'freak', 'midge', 'poked',
+            'ethyl', 'abode', 'tulip', 'hover', 'tudor', 'sheik', 'aptly', 'ounce',
+            'spoil', 'ebony', 'amuse', 'farce', 'islam', 'husky', 'chips', 'broth',
+            'feast', 'grape', 'cohen', 'stoic', 'andre', 'taper', 'caste', 'blitz',
+            'karen', 'amber', 'fiend', 'oiled', 'loath', 'flory', 'bogus', 'cloak',
+            'monel', 'vicky', 'ahmet', 'tuned', 'drown', 'snort', 'burly', 'chalk',
+            'drone', 'havoc', 'smirk', 'flare', 'canto', 'swarm', 'waver', 'thump',
+            'cheat', 'hiram', 'bronc', 'vista', 'idaho', 'bowls', 'pedro', 'float',
+            'whirl', 'shiny', 'yeast', 'smelt', 'toner', 'grate', 'lingo', 'shawl',
+            'freya', 'lurch', 'oxide', 'budge', 'modal', 'wager', 'vying', 'thorn',
+            'foamy', 'shred', 'toxic', 'leigh', 'lurid', 'quart', 'slant', 'lance',
+            'taxis', 'hindu', 'bayed', 'risky', 'stink', 'loper', 'shirl', 'fused',
+            'swine', 'laity', 'foyer', 'grits', 'niche', 'shied', 'salve', 'leash',
+            'lusty', 'carve', 'clown', 'cadre', 'cobra', 'scare', 'brink', 'louse',
+            'peach', 'rhyme', 'blest', 'crumb', 'peony', 'bland', 'sheaf', 'plush',
+            'junta', 'aloft', 'spurt', 'palsy', 'pasty', 'naomi', 'trash', 'cones',
+            'mitch', 'sybil', 'wispy', 'waned', 'clyde', 'glide', 'facet', 'horde',
+            'bryce', 'gourd', 'glint', 'fetid', 'unify', 'crone', 'hazel', 'cagey',
+            'inure', 'sedan', 'milky', 'sprue', 'dusky', 'sneak', 'relay', 'patio',
+            'laced', 'navel', 'eying', 'bugle', 'yokel', 'lymph', 'beryl', 'torch',
+            'spate', 'limbo', 'fling', 'filth', 'tango', 'roach', 'clips', 'slung',
+            'thorp', 'fives', 'doria', 'baron', 'nudge', 'chasm', 'craig', 'astor',
+            'gusty', 'lubra', 'plied', 'rumen', 'robin', 'rabid', 'walsh', 'snead',
+            'rangy', 'percy', 'hovel', 'gable', 'chant', 'cleft', 'chide', 'gusto',
+            'santo', 'bayou', 'shove', 'harem', 'prick', 'finer', 'mourn', 'usher',
+            'chunk', 'anise', 'sable', 'carol', 'fable', 'banjo', 'craze', 'leaky',
+            'leapt', 'feint', 'pluck', 'mixer', 'wakes', 'agone', 'mavis', 'lumen',
+            'salvo', 'swirl', 'liter', 'dowry', 'adore', 'altho', 'flier', 'decry',
+            'carlo', 'boyer', 'stair', 'inter', 'mirth', 'stung', 'mater', 'bosch',
+            'bonus', 'edgar', 'video', 'epsom', 'locus', 'cabot', 'judas', 'aleck',
+            'pivot', 'takin', 'genus', 'stump', 'slang', 'heady', 'gator', 'blush',
+            'floyd', 'lumpy', 'quake', 'untie', 'whore', 'plume', 'ashen', 'cramp',
+            'fritz', 'monty', 'purge', 'amigo', 'julep', 'rowed', 'ribes', 'manic',
+            'pater', 'regal', 'perky', 'levis', 'stave', 'coupe', 'rouse', 'venom',
+            'grind', 'dowel', 'comet', 'buyer', 'valet', 'curio', 'align', 'piles',
+            'bundy', 'scary', 'cider', 'grist', 'elvis', 'grunt', 'angst', 'belch',
+            'amend', 'bilge', 'agile', 'flick', 'nadir', 'broil', 'chute', 'jumpy',
+            'hafiz', 'arson', 'windy', 'erupt', 'audio', 'smear', 'suave', 'endow',
+            'curie', 'balmy', 'crate', 'frock', 'comus', 'sonic', 'flank', 'grail',
+            'adobe', 'pouch', 'vault', 'drawl', 'aspen', 'shrug', 'birch', 'prowl',
+            'spike', 'abler', 'wring', 'dirge', 'soapy', 'copra', 'brake', 'strap',
+            'tipsy', 'hotly', 'flaky', 'bough', 'drake', 'manes', 'latex', 'swipe',
+            'manly', 'surly', 'inept', 'crave', 'pique', 'tyler', 'lanky', 'norma',
+            'waive', 'cameo', 'draco', 'jules', 'julio', 'tardy', 'augen', 'antic',
+            'thule', 'swank', 'pithy', 'spume', 'scion', 'plasm', 'cozen', 'snuck',
+            'inset', 'xenia', 'seton', 'crank', 'clove', 'shoji', 'skate', 'wetly',
+            'enoch', 'chafe', 'dwelt', 'comer', 'frown', 'pored', 'covet', 'crust',
+            'vadim', 'caleb', 'urine', 'mince', 'delia', 'glean', 'prank', 'sidle',
+            'bruno', 'minot', 'tripe', 'prune', 'stunk', 'niobe', 'exalt', 'khasi',
+            'rheum', 'longs', 'sigma', 'khmer', 'gawky', 'bourn', 'carob', 'waxen',
+            'suing', 'datum', 'toxin', 'morel', 'serif', 'celia', 'phyla', 'douce',
+            'heaps', 'swart', 'bleat', 'yearn', 'swath', 'mural', 'torah', 'corny',
+            'scour', 'spicy', 'degas', 'shunt', 'fiche', 'hefty', 'talky', 'savor',
+            'faker', 'query', 'tunic', 'riven', 'clive', 'mousy', 'inapt', 'chive',
+            'matsu', 'ocher', 'argot', 'squaw', 'renal', 'graze', 'wrack', 'elfin',
+            'luger', 'miner', 'crypt', 'murat', 'croak', 'wield', 'perch', 'snare',
+            'bower', 'avert', 'retch', 'flute', 'champ', 'saute', 'brunt', 'wordy',
+            'remus', 'joust', 'chaps', 'tapis', 'tongs', 'fleck', 'mould', 'munch',
+            'binge', 'cleat', 'penal', 'groan', 'avery', 'sumac', 'pecos', 'infer',
+            'silky', 'tepid', 'tonic', 'wormy', 'ohmic', 'tangy', 'bowie', 'shank',
+            'thine', 'crump', 'klaus', 'shrub', 'trump', 'brawl', 'orate', 'heron',
+            'asdic', 'sepia', 'pinto', 'leafy', 'lathe', 'anvil', 'hoist', 'jakes',
+            'aegis', 'faery', 'pablo', 'humid', 'sofar', 'ileum', 'fitch', 'axiom',
+            'natch', 'cedar', 'boxer', 'valor', 'cased', 'amity', 'clang', 'porgy',
+            'hyena', 'kraft', 'amino', 'dingo', 'dower', 'timon', 'betsy', 'staid',
+            'swami', 'janet', 'bloke', 'flora', 'saber', 'saucy', 'buxom', 'chump',
+            'cumin', 'froth', 'brash', 'mitre', 'paled', 'liber', 'lotus', 'amide',
+            'lydia', 'blair', 'carty', 'wacky', 'blanc', 'duane', 'gnome', 'posey',
+            'atone', 'linus', 'daunt', 'tansy', 'metis', 'meaty', 'rogue', 'oaken',
+            'manse', 'omega', 'unfit', 'beady', 'giver', 'boyce', 'snout', 'hokan',
+            'uncap', 'triad', 'yeard', 'beman', 'siren', 'biter', 'atune', 'abner',
+            'clout', 'mauve', 'duces', 'pacer', 'knead', 'randy', 'borax', 'fusty',
+            'tramp', 'ponce', 'gauze', 'olden', 'snail', 'kiowa', 'melon', 'cheng',
+            'chomp', 'creak', 'waltz', 'sling', 'oskar', 'baldy', 'askew', 'eclat',
+            'poesy', 'salon', 'flirt', 'whack', 'clare', 'fluke', 'twain', 'prexy',
+            'bison', 'adieu', 'yodel', 'graft', 'afire', 'filmy', 'quirk', 'thong',
+            'hinge', 'scald', 'zoned', 'campo', 'deity', 'poach', 'lifer', 'moire',
+            'grope', 'wrest', 'borak', 'girth', 'myron', 'harpy', 'chevy', 'sprig',
+            'chile', 'tecum', 'franc', 'caged', 'camel', 'ghent', 'porta', 'kraut',
+            'shady', 'bantu', 'diver', 'loren', 'polka', 'infra', 'ligne', 'jacob',
+            'felon', 'cyril', 'veldt', 'polis', 'quits', 'jeans', 'asher', 'kiang',
+            'acrid', 'zebra', 'snick', 'peaky', 'basil', 'jager', 'muong', 'wreak',
+            'jacky', 'levin', 'erwin', 'guile', 'howdy', 'flake', 'loser', 'blimp',
+            'milan', 'nepal', 'pales', 'grubs', 'synod', 'ghoul', 'scrim', 'gazer',
+            'bravo', 'miter', 'mario', 'warty', 'shack', 'spout', 'agnes', 'groat',
+            'volta', 'frist', 'equip', 'nymph', 'pecan', 'coble', 'bucky', 'damon',
+            'foray', 'mains', 'adorn', 'yaqui', 'molar', 'idler', 'galen', 'showy',
+            'patsy', 'saver', 'carte', 'shari', 'tidal', 'irate', 'hertz', 'lobar',
+            'plaid', 'these'
+        ];
+
+        let secret = '';
+        let guesses = {};
+        let gameWon = false;
+
+        // Initialize the game
+        function initGame() {
+            secret = wordList[Math.floor(Math.random() * wordList.length)];
+            guesses = {};
+            gameWon = false;
+            
+            // Clear UI
+            document.getElementById('feedbackSection').innerHTML = '';
+            document.getElementById('message').className = 'message hidden';
+            document.getElementById('gameStats').className = 'game-stats hidden';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            
+            console.log('Secret word:', secret); // For debugging
+        }
+
+        function countBullsEyeMagpie(guess) {
+            guess = guess.toLowerCase();
+            const secretLower = secret.toLowerCase();
+            
+            // Find common letters
+            const common = guess.split('').filter(c => secretLower.includes(c));
+            
+            // Find bulls eye (exact position matches)
+            const bullsEye = [];
+            for (let i = 0; i < guess.length; i++) {
+                if (guess[i] === secretLower[i]) {
+                    bullsEye.push(guess[i]);
+                }
+            }
+            
+            // Find magpie (correct letter, wrong position)
+            const magpie = common.filter(c => !bullsEye.includes(c));
+            
+            // Remove duplicates for magpie count
+            const uniqueMagpie = [...new Set(magpie)];
+            
+            guesses[guess] = [bullsEye.length, uniqueMagpie.length];
+            return guesses[guess];
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+
+        function hideMessage() {
+            document.getElementById('message').className = 'message hidden';
+        }
+
+        function addFeedback(guess, bullsEye, magpie) {
+            const feedbackSection = document.getElementById('feedbackSection');
+            const feedbackItem = document.createElement('div');
+            feedbackItem.className = 'feedback-item';
+            
+            feedbackItem.innerHTML = `
+                <span class="guess-word">${guess.toUpperCase()}</span>
+                <div class="feedback-stats">
+                    <span class="stat bulls-eye">🎯 ${bullsEye} Bulls Eye</span>
+                    <span class="stat magpie">🐦 ${magpie} Magpie</span>
+                </div>
+            `;
+            
+            feedbackSection.appendChild(feedbackItem);
+        }
+
+        function handleGuess() {
+            const input = document.getElementById('guessInput');
+            const guess = input.value.trim().toLowerCase();
+            
+            // Clear previous message
+            hideMessage();
+            
+            // Validate input
+            if (guess.length !== 5) {
+                showMessage('Please enter exactly 5 letters!', 'error');
+                return;
+            }
+            
+            if (!/^[a-zA-Z]+$/.test(guess)) {
+                showMessage('Please enter only letters!', 'error');
+                return;
+            }
+            
+            // Check if already guessed
+            if (guesses[guess]) {
+                showMessage('You already guessed that word!', 'error');
+                return;
+            }
+            
+            // Process the guess
+            const [bullsEye, magpie] = countBullsEyeMagpie(guess);
+            addFeedback(guess, bullsEye, magpie);
+            
+            // Clear input
+            input.value = '';
+            
+            // Check if won
+            if (bullsEye === 5) {
+                gameWon = true;
+                showMessage('🎉 Congratulations! You found the word!', 'success');
+                endGame();
+            } else {
+                showMessage(`Keep trying! You have ${bullsEye} bulls eye and ${magpie} magpie.`, 'info');
+            }
+        }
+
+        function endGame() {
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('secretWord').textContent = secret.toUpperCase();
+            document.getElementById('gameStats').className = 'game-stats';
+        }
+
+        // Event listeners
+        document.getElementById('submitBtn').addEventListener('click', handleGuess);
+        
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleGuess();
+            }
+        });
+        
+        document.getElementById('newGameBtn').addEventListener('click', initGame);
+        
+        // Auto-focus input
+        document.getElementById('guessInput').addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Initialize the game when page loads
+        initGame();
+        
+        // Auto-focus the input
+        document.getElementById('guessInput').focus();
+    </script>
+</body>
+</html> 
